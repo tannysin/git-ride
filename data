@@ -1,0 +1,107 @@
+[
+  {
+    "id": 1,
+    "username": "john_doe",
+    "password": "1234"
+  }
+]
+
+[
+  {
+    "id": 1,
+    "distance": "5 miles",
+    "fare": "$10.00"
+  },
+  {
+    "id": 2,
+    "distance": "3 miles",
+    "fare": "$6.00"
+  }
+]
+
+const express = require('express');
+const fs = require('fs');
+const app = express();
+const PORT = 3000;
+
+// Middleware to parse JSON request bodies
+app.use(express.json());
+
+// Read the users and rides mock data
+const usersData = JSON.parse(fs.readFileSync('./data/users.json'));
+const ridesData = JSON.parse(fs.readFileSync('./data/rides.json'));
+
+// Register User Endpoint
+app.post('/register', (req, res) => {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Username and password are required' });
+    }
+
+    const userExists = usersData.find(user => user.username === username);
+    
+    if (userExists) {
+        return res.status(400).json({ message: 'Username already exists' });
+    }
+
+    const newUser = { id: usersData.length + 1, username, password };
+    usersData.push(newUser);
+    fs.writeFileSync('./data/users.json', JSON.stringify(usersData, null, 2));
+
+    res.status(201).json({ message: 'User registered successfully' });
+});
+
+// List Rides Endpoint
+app.get('/rides', (req, res) => {
+    res.status(200).json(ridesData);
+});
+
+// Ride Details Endpoint
+app.get('/rides/:id', (req, res) => {
+    const rideId = parseInt(req.params.id);
+    const ride = ridesData.find(r => r.id === rideId);
+
+    if (!ride) {
+        return res.status(404).json({ message: 'Ride not found' });
+    }
+
+    res.status(200).json(ride);
+});
+
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+
+{
+  "username": "jane_doe",
+  "password": "abcd1234"
+}
+
+
+{
+  "message": "User registered successfully"
+}
+
+
+[
+  {
+    "id": 1,
+    "distance": "5 miles",
+    "fare": "$10.00"
+  },
+  {
+    "id": 2,
+    "distance": "3 miles",
+    "fare": "$6.00"
+  }
+]
+
+
+{
+  "id": 1,
+  "distance": "5 miles",
+  "fare": "$10.00"
+}
